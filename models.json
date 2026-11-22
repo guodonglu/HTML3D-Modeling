@@ -1,0 +1,32 @@
+{
+  "name": "HTML3d建模",
+  "repo": "guodonglu/HTML3D-Modeling",
+  "branch": "main",
+  "updatedAt": "2026-11-22T15:17:17.322Z",
+  "pagesBaseUrl": "https://guodonglu.github.io/HTML3D-Modeling/",
+  "rawBaseUrl": "https://raw.githubusercontent.com/guodonglu/HTML3D-Modeling/main/",
+  "total": 1,
+  "models": [
+    {
+      "id": "shimano-mt200",
+      "filename": "shimano-mt200.html",
+      "title": "禧玛诺 MT200 液压碟刹总成 3D 结构建模",
+      "subtitle": "BL-MT201 刹把 · SM-BH59 油管 · BR-MT200 卡钳 · SM-RT26 碟片",
+      "category": "机械结构",
+      "tags": [
+        "禧玛诺",
+        "液压碟刹",
+        "Three.js",
+        "CAD拆解",
+        "爆炸图",
+        "运动学模拟"
+      ],
+      "description": "高精度 3D 结构拆解、运动学模拟与液压故障演示。支持爆炸视图无级滑动、捏刹制动力传导、X-Ray透视剖切、脱出漏油模拟及各零部件工程百科交互拾取。",
+      "path": "shimano-mt200.html",
+      "previewUrl": "https://guodonglu.github.io/HTML3D-Modeling/shimano-mt200.html",
+      "rawUrl": "https://raw.githubusercontent.com/guodonglu/HTML3D-Modeling/main/shimano-mt200.html",
+      "author": "guodonglu",
+      "createdAt": "2026-11-22"
+    }
+  ]
+}

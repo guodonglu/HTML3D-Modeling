@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>禧玛诺 MT200 液压碟刹总成 3D 结构建模</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans SC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Three.js r128 & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0f17;
+      color: #e2e8f0;
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      touch-action: none;
+    }
+    /* Custom industrial range slider */
+    input[type="range"].eng-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 999px;
+      outline: none;
+      border: 1px solid #334155;
+    }
+    input[type="range"].eng-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #0f172a;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
+      cursor: pointer;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    input[type="range"].eng-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #7dd3fc;
+    }
+    input[type="range"].eng-slider.pink-slider::-webkit-slider-thumb {
+      background: #f43f5e;
+      box-shadow: 0 0 10px rgba(244, 63, 94, 0.6);
+    }
+    /* Glassmorphism industrial panel */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+    }
+    /* Custom subtle scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.4);
+      border-radius: 999px;
+    }
+    /* 3D Floating Label */
+    #floating-tag {
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Viewport Canvas -->
+  <div id="canvas-container"></div>
+
+  <!-- 3D Projected Floating Part Label -->
+  <div id="floating-tag" class="fixed z-20 hidden opacity-0 -translate-x-1/2 -translate-y-full pb-3">
+    <div class="px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/60 shadow-lg shadow-sky-500/20 flex items-center gap-2 whitespace-nowrap">
+      <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+      <span id="floating-tag-title" class="text-xs font-semibold text-sky-200 tracking-wide">部件名称</span>
+    </div>
+    <div class="w-px h-3 bg-sky-400/70 mx-auto"></div>
+  </div>
+
+  <!-- Top Header Bar -->
+  <header class="fixed top-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+    <div class="glass-panel rounded-xl px-4 py-2.5 pointer-events-auto flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center shadow-inner border border-sky-300/30">
+        <!-- Disc Brake SVG Icon -->
+        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="3.5" />
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm sm:text-base font-bold text-slate-100 tracking-tight">SHIMANO 禧玛诺 MT200 液压碟刹总成</h1>
+          <span class="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">3D CAD 结构拆解</span>
+        </div>
+        <p class="text-[11px] text-slate-400">BL-MT201 刹把 · SM-BH59 油管 · BR-MT200 卡钳 · SM-RT26 碟片</p>
+      </div>
+    </div>
+
+    <!-- Camera Presets & Panel Toggle -->
+    <div class="glass-panel rounded-xl p-1.5 pointer-events-auto flex items-center gap-1 sm:gap-1.5">
+      <button onclick="setCameraView('overview')" id="btn-view-overview" class="view-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-sky-500/25 text-sky-300 border border-sky-400/40 transition">
+        整体总成
+      </button>
+      <button onclick="setCameraView('caliper')" id="btn-view-caliper" class="view-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 border border-transparent transition">
+        卡钳与活塞特写
+      </button>
+      <button onclick="setCameraView('rotor')" id="btn-view-rotor" class="view-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 border border-transparent transition">
+        碟片摩擦面
+      </button>
+      <button onclick="toggleMobileUI()" id="btn-toggle-ui" class="lg:hidden px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-200 border border-slate-700 ml-1">
+        收起面板
+      </button>
+    </div>
+  </header>
+
+  <!-- Leak Warning Banner (Visible when Pop-out Leak mode triggers) -->
+  <div id="leak-alert-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-30 hidden max-w-md w-[92%] pointer-events-none">
+    <div class="rounded-xl bg-rose-950/95 border border-rose-500/80 px-4 py-2.5 shadow-2xl shadow-rose-900/60 flex items-start gap-3">
+      <div class="w-6 h-6 rounded-full bg-rose-500/20 border border-rose-400 flex items-center justify-center shrink-0 mt-0.5 text-rose-300 font-bold text-xs">!</div>
+      <div>
+        <div class="text-xs font-bold text-rose-200">警告：活塞已脱离矩形密封圈并发生矿物油泄漏！</div>
+        <div class="text-[11px] text-rose-300/90 mt-0.5 leading-relaxed">
+          未装碟片或黄色止油块时捏刹，树脂活塞行程失去限位直接顶出缸体，粉色矿物油从密封槽喷出，系统已进气失压。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Left Control Panel: Simulation & Kinematics -->
+  <aside id="left-panel" class="fixed bottom-3 left-3 right-3 lg:right-auto lg:top-20 lg:bottom-4 lg:w-80 z-20 glass-panel rounded-2xl p-4 flex flex-col gap-3.5 max-h-[46vh] lg:max-h-none overflow-y-auto custom-scroll transition-all duration-300">
+    <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+        运动学与结构交互控制
+      </span>
+      <span id="status-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium">
+        系统油压正常
+      </span>
+    </div>
+
+    <!-- 1. Exploded View Slider -->
+    <div class="space-y-1.5">
+      <div class="flex justify-between items-center text-xs">
+        <label for="explode-slider" class="font-medium text-slate-200">爆炸视图拆解 (Exploded View)</label>
+        <span id="explode-val" class="font-mono text-sky-400 font-semibold">0%</span>
+      </div>
+      <input id="explode-slider" type="range" min="0" max="100" value="0" class="eng-slider" />
+      <div class="flex justify-between text-[10px] text-slate-400">
+        <span>装配状态</span>
+        <span>内部密封圈/活塞展开</span>
+      </div>
+    </div>
+
+    <!-- 2. Brake Lever Squeeze Slider & Quick Action -->
+    <div class="space-y-1.5">
+      <div class="flex justify-between items-center text-xs">
+        <label for="brake-slider" class="font-medium text-slate-200">捏刹制动力 (Brake Force)</label>
+        <span id="brake-val" class="font-mono text-rose-400 font-semibold">0%</span>
+      </div>
+      <input id="brake-slider" type="range" min="0" max="100" value="0" class="eng-slider pink-slider" />
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button id="btn-hold-brake" class="py-2 px-3 rounded-xl text-xs font-semibold bg-rose-600/85 hover:bg-rose-500 active:scale-95 text-white border border-rose-400/40 shadow-lg shadow-rose-900/30 transition select-none">
+          按住捏紧刹把
+        </button>
+        <button id="btn-release-brake" class="py-2 px-3 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600/60 transition">
+          完全松开复位
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Toggles: X-Ray Cutaway & Piston Pop-out Fault -->
+    <div class="space-y-2 pt-1 border-t border-slate-700/60">
+      <!-- X-Ray Mode Toggle -->
+      <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/65 hover:bg-slate-800 border border-slate-700/70 cursor-pointer transition">
+        <div>
+          <div class="text-xs font-semibold text-sky-300">卡钳半透明剖视 (X-Ray 透视)</div>
+          <div class="text-[10px] text-slate-400">透视外壳查看内部油道、矩形密封圈与活塞</div>
+        </div>
+        <input id="toggle-xray" type="checkbox" class="sr-only peer" />
+        <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:bg-sky-500 relative transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+      </label>
+
+      <!-- Piston Pop-out Leak Demo Toggle -->
+      <label class="flex items-center justify-between p-2.5 rounded-xl bg-rose-950/30 hover:bg-rose-950/50 border border-rose-500/30 cursor-pointer transition">
+        <div class="pr-2">
+          <div class="text-xs font-semibold text-rose-300">无碟片误捏（活塞顶脱漏油演示）</div>
+          <div class="text-[10px] text-slate-400">移除碟片与来令片，演示捏刹导致活塞脱出漏油</div>
+        </div>
+        <input id="toggle-popout" type="checkbox" class="sr-only peer" />
+        <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:bg-rose-500 relative shrink-0 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+      </label>
+    </div>
+
+    <!-- Rotor Speed & Principle Note -->
+    <div class="rounded-xl bg-slate-900/90 border border-slate-800 p-2.5 text-[11px] text-slate-400 leading-relaxed">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-slate-300 font-medium">矩形密封圈回位原理：</span>
+        <span id="rotor-rpm" class="font-mono text-[10px] text-emerald-400">碟片转速: 180 RPM</span>
+      </div>
+      捏刹时油压推动活塞，使黑色<span class="text-sky-300">矩形橡胶密封圈</span>发生弹性剪切形变；松开刹把后，密封圈依靠自身橡胶弹性恢复原状，自动将活塞拉回约 0.15mm 间隙。
+    </div>
+  </aside>
+
+  <!-- Right Inspector Panel: Selected Component Details -->
+  <aside id="right-panel" class="hidden lg:flex fixed top-20 right-3 bottom-4 w-80 z-20 glass-panel rounded-2xl p-4 flex-col justify-between overflow-y-auto custom-scroll">
+    <div class="space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+          零件工程结构百科
+        </span>
+        <span class="text-[10px] text-slate-400">点击模型任意部件查看</span>
+      </div>
+
+      <!-- Part Header -->
+      <div class="rounded-xl bg-slate-800/70 border border-slate-700/80 p-3">
+        <div id="part-category" class="text-[10px] font-semibold uppercase tracking-wider text-sky-400 mb-0.5">总成概览</div>
+        <h2 id="part-title" class="text-base font-bold text-white">禧玛诺 MT200 液压碟刹系统</h2>
+        <div id="part-model" class="text-xs font-mono text-slate-400 mt-0.5">BL-MT201 + SM-BH59 + BR-MT200 + SM-RT26</div>
+      </div>
+
+      <!-- Specs Grid -->
+      <div class="grid grid-cols-1 gap-2 text-xs">
+        <div class="rounded-xl bg-slate-900/75 border border-slate-800 p-2.5">
+          <div class="text-[10px] text-slate-400 uppercase mb-0.5">制造材质与工艺</div>
+          <div id="part-material" class="text-slate-200 font-medium">铸造铝合金外壳 / 酚醛树脂活塞 / NBR 丁腈橡胶密封圈 / 不锈钢碟片</div>
+        </div>
+
+        <div class="rounded-xl bg-slate-900/75 border border-slate-800 p-2.5">
+          <div class="text-[10px] text-slate-400 uppercase mb-0.5">核心功能与结构原理</div>
+          <div id="part-function" class="text-slate-300 leading-relaxed">
+            封闭式矿物油液压传动系统。捏动刹把时，主缸活塞压缩粉色禧玛诺矿物油，通过油管将帕斯卡静压力传递至卡钳双活塞，夹紧来令片与旋转碟片实现线性减速。
+          </div>
+        </div>
+
+        <div class="rounded-xl bg-amber-950/30 border border-amber-500/30 p-2.5">
+          <div class="text-[10px] text-amber-300 font-semibold uppercase mb-1 flex items-center gap-1">
+            <span>⚠</span> 拆装与维护注意事项
+          </div>
+          <div id="part-maintenance" class="text-amber-100/90 text-[11px] leading-relaxed">
+            1. 仅限使用禧玛诺原厂粉色矿物油，严禁混入 DOT 刹车油（会腐蚀密封圈）。<br/>
+            2. 复位活塞时严禁用金属螺丝刀直接撬顶树脂活塞边缘，须垫旧来令片或使用塑料撬胎棒。<br/>
+            3. 新换碟片与来令片需进行 15–20 次中速减速磨合（开光）以消除低速刹停异响。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Part Selector Pills -->
+    <div class="pt-3 border-t border-slate-700/60 mt-3">
+      <div class="text-[10px] text-slate-400 mb-2">快速定位核心部件：</div>
+      <div class="flex flex-wrap gap-1.5" id="part-pills">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Bottom Part Toast (Shown on small screens when tapping a 3D part) -->
+  <div id="mobile-part-card" class="lg:hidden fixed top-20 left-3 right-3 z-20 hidden glass-panel rounded-xl p-3 border border-sky-400/40">
+    <div class="flex items-start justify-between gap-2">
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="mob-part-title" class="text-xs font-bold text-white">部件名称</span>
+          <span id="mob-part-model" class="text-[10px] font-mono text-sky-300 bg-sky-500/15 px-1.5 py-0.5 rounded">型号</span>
+        </div>
+        <p id="mob-part-note" class="text-[11px] text-slate-300 mt-1 line-clamp-2">维护说明</p>
+      </div>
+      <button onclick="document.getElementById('mobile-part-card').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs px-2 py-1">✕</button>
+    </div>
+  </div>
+
+  <!-- Interaction Hint Footer -->
+  <div class="hidden lg:flex fixed bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+    <div class="px-3.5 py-1.5 rounded-full bg-slate-900/75 border border-slate-700/60 text-[11px] text-slate-400 flex items-center gap-3 backdrop-blur-md">
+      <span>左键/单指：旋转视角</span>
+      <span>•</span>
+      <span>滚轮/双指：缩放</span>
+      <span>•</span>
+      <span>右键/双指拖动：平移</span>
+      <span>•</span>
+      <span class="text-sky-300">点击零件查看工程参数</span>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. 零件工程数据库 (Engineering Metadata for Raycast Inspection)
+    // =========================================================================
+    const PART_DATABASE = {
+      lever_body: {
+        id: 'lever_body',
+        shortName: 'BL-MT201 刹把主体',
+        category: '主缸总成 (Master Cylinder)',
+        title: 'BL-MT201 铝合金刹把主体与油壶',
+        model: 'SHIMANO BL-MT201 (22.2mm 车把夹环)',
+        material: '阳极氧化黑色铸造铝合金壳体 / 内部橡胶储油囊',
+        func: '内置主缸活塞与储油壶，通过钢制三指制动拉杆杠杆放大手指握力，推动主缸活塞将矿物油压入油管。',
+        maintenance: '安装车把夹环螺栓标准扭矩为 6–8 Nm。倒车或倒置车辆前需确保注油螺丝拧紧，防止气泡进入主缸油路。'
+      },
+      bleed_screw: {
+        id: 'bleed_screw',
+        shortName: '顶部注油口螺丝',
+        category: '液压维护接口',
+        title: '刹把内六角注油螺丝与 O 型圈',
+        model: 'M5 内六角注油螺丝 + 氟橡胶 O-Ring',
+        material: '防锈镀层钢制螺丝 / 耐矿物油黄色橡胶 O 型圈',
+        func: '用于连接禧玛诺专用注油漏斗（Funnel），进行单向重力排气或双向灌油排空操作，释放多余系统油压。',
+        maintenance: '拧松前务必将刹把调至水平位置并垫好吸油纸巾。回装拧紧扭矩仅需 0.5–1 Nm（轻轻带紧即可，切勿过度用力滑丝或压扁 O 型圈）。'
+      },
+      hose: {
+        id: 'hose',
+        shortName: 'SM-BH59 液压油管',
+        category: '高压液压管路',
+        title: 'SM-BH59-JK-SS 高压三层液压油管',
+        model: '外径 5.0mm / 内径 2.1mm (标准树脂油管)',
+        material: '耐磨聚酰胺外层 + 高强度纤维编织抗膨胀层 + 耐油内衬 + 粉色矿物油',
+        func: '在高达数兆帕的制动油压下保持极低管壁膨胀率，将刹把主缸的粉色矿物油压力无损传递至卡钳分泵。',
+        maintenance: '截短油管重新安装时必须更换全新的黄铜橄榄套（Olive）与油针（Insert），严禁折弯半径过小导致内壁折损。'
+      },
+      caliper_body: {
+        id: 'caliper_body',
+        shortName: 'BR-MT200 卡钳主体',
+        category: '对向双活塞卡钳 (Caliper)',
+        title: 'BR-MT200 Post-Mount 直装式双活塞卡钳',
+        model: 'SHIMANO BR-MT200 (74mm A柱直装标准)',
+        material: '分体式黑色喷涂铸造铝合金壳体 / 内部交叉连通油道',
+        func: '内部加工有左右对称高精度活塞缸体及连通油道，使两侧活塞获得完全相等的液压推力，实现均匀夹持。',
+        maintenance: '卡钳固定螺丝标准扭矩为 6–8 Nm。若磨合后出现轻微蹭碟，可松开两颗固定螺丝，捏紧刹把使卡钳自动居中后再交叉拧紧。'
+      },
+      piston_seal: {
+        id: 'piston_seal',
+        shortName: '矩形截面密封圈',
+        category: '核心密封与回位元件',
+        title: '卡钳缸体矩形截面橡胶密封圈 (Rectangular Seal)',
+        model: 'NBR 专用耐矿物油矩形截面密封圈',
+        material: '高弹性模量丁腈橡胶 (NBR)',
+        func: '兼具双重核心使命：① 防止高压矿物油从活塞间隙泄漏；② 捏刹时随活塞微幅弹性剪切变形，松刹时凭借橡胶回弹力自动将活塞拉回初始间隙。',
+        maintenance: '严禁接触 DOT 刹车油或喷涂 WD-40 溶剂，否则橡胶会溶胀失效。禧玛诺原厂不单独零售此密封圈，一旦被撬伤切边只能更换卡钳总成。'
+      },
+      resin_piston: {
+        id: 'resin_piston',
+        shortName: '酚醛树脂活塞',
+        category: '液压执行作动元件',
+        title: '高隔热酚醛树脂双活塞 (Resin Pistons)',
+        model: 'Ø22mm 对向双活塞结构',
+        material: '高强度耐高温酚醛树脂复合材料 (Phenolic Resin)',
+        func: '直接承受油压推动来令片。采用酚醛树脂而非金属制造，是为了阻断制动摩擦产生的高温向卡钳内部矿物油传导，防止刹车油沸腾气阻。',
+        maintenance: '【重要警告】树脂活塞质地较脆，换新来令片推回活塞时，严禁用金属一字螺丝刀直接硬撬活塞边缘！必须垫上旧来令片隔着推或使用塑料撬胎棒。'
+      },
+      brake_pads: {
+        id: 'brake_pads',
+        shortName: 'B05S 树脂来令片',
+        category: '摩擦制动耗材',
+        title: 'B05S-RX 树脂来令片与不锈钢复位簧片',
+        model: 'SHIMANO B05S (宽型耐磨升级版)',
+        material: '钢制背板 + 有机树脂摩擦块 + 不锈钢 V 型复位簧片',
+        func: '在活塞推力下直接夹紧旋转中的不锈钢碟片，将车轮动能转化为热能；复位簧片辅助将两片来令片向外撑开贴紧活塞。',
+        maintenance: '摩擦层厚度低于 0.5mm 时必须更换。安装时注意分辨左右（L/R）标记；若不小心沾染链条油或矿物油会导致尖叫失灵，建议直接换新。'
+      },
+      split_pin: {
+        id: 'split_pin',
+        shortName: '开口销与排油嘴',
+        category: '紧固与排气附件',
+        title: '来令片定位开口销 (Split Pin) 与 7mm 排油嘴',
+        model: '不锈钢开口销 + 橡胶防尘帽排油嘴',
+        material: '304 不锈钢销钉 / 钢制单向排油阀体',
+        func: '开口销穿过卡钳耳孔与来令片顶孔，防止制动时来令片上下窜动脱落；顶部排油嘴用于连接注射器从下往上灌注矿物油。',
+        maintenance: '装好开口销后必须将尾部单侧叉脚向外掰弯约 30° 防脱；排油嘴拧紧扭矩为 4–6 Nm，操作完毕务必盖好橡胶防尘帽防泥沙。'
+      },
+      rotor: {
+        id: 'rotor',
+        shortName: 'SM-RT26 六钉碟片',
+        category: '旋转制动盘 (Brake Rotor)',
+        title: 'SM-RT26 160mm 国际六钉标准碟片',
+        model: 'Ø160mm / 厚度 1.8mm (仅限树脂来令片)',
+        material: '高碳马氏体不锈钢制动环 + 6 颗 T25 梅花螺丝与防松垫片',
+        func: '随花鼓高速旋转，表面精密排列的圆孔用于散热、排泥排水并刮除来令片表层积碳，提供稳定摩擦表面。',
+        maintenance: '6 颗固定螺丝需按对角星形顺序分次拧紧至 6 Nm（切忌顺时针逐颗拧死导致碟片偏摆）。碟片磨损至厚度 ≤ 1.5mm 时必须报废更换。'
+      }
+    };
+
+    // =========================================================================
+    // 2. Three.js 场景、相机、渲染器与光照初始化
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f17);
+    scene.fog = new THREE.FogExp2(0x0b0f17, 0.016);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(14, 9.5, 19);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 5;
+    controls.maxDistance = 48;
+    controls.target.set(1.5, 0.5, 0);
+
+    // Studio & Engineering Rim Lighting
+    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.55);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.35);
+    keyLight.position.set(14, 22, 16);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 2;
+    keyLight.shadow.camera.far = 60;
+    const d = 18;
+    keyLight.shadow.camera.left = -d;
+    keyLight.shadow.camera.right = d;
+    keyLight.shadow.camera.top = d;
+    keyLight.shadow.camera.bottom = -d;
+    keyLight.shadow.bias = -0.0005;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.55);
+    fillLight.position.set(-16, 8, -12);
+    scene.add(fillLight);
+
+    const bottomRimLight = new THREE.DirectionalLight(0xf43f5e, 0.3);
+    bottomRimLight.position.set(0, -14, 10);
+    scene.add(bottomRimLight);
+
+    // Subtle Engineering Reference Grid Floor
+    const gridHelper = new THREE.GridHelper(48, 48, 0x1e293b, 0x111827);
+    gridHelper.position.y = -7.2;
+    scene.add(gridHelper);
+
+    // =========================================================================
+    // 3. 共享PBR工业材质定义 (Shared Engineering Materials)
+    // =========================================================================
+    const materials = {
+      anodizedBlack: new THREE.MeshStandardMaterial({
+        color: 0x1a1e26,
+        roughness: 0.36,
+        metalness: 0.78
+      }),
+      caliperBody: new THREE.MeshStandardMaterial({
+        color: 0x1f242d,
+        roughness: 0.42,
+        metalness: 0.72,
+        transparent: true,
+        opacity: 1.0
+      }),
+      leverBlade: new THREE.MeshStandardMaterial({
+        color: 0x14171d,
+        roughness: 0.28,
+        metalness: 0.85
+      }),
+      stainlessSteel: new THREE.MeshStandardMaterial({
+        color: 0xd8e0e8,
+        roughness: 0.22,
+        metalness: 0.92
+      }),
+      brushedSteel: new THREE.MeshStandardMaterial({
+        color: 0x94a3b8,
+        roughness: 0.35,
+        metalness: 0.88
+      }),
+      brass: new THREE.MeshStandardMaterial({
+        color: 0xd4a338,
+        roughness: 0.28,
+        metalness: 0.88
+      }),
+      rubberBlack: new THREE.MeshStandardMaterial({
+        color: 0x0f1115,
+        roughness: 0.82,
+        metalness: 0.05
+      }),
+      rectangularSeal: new THREE.MeshStandardMaterial({
+        color: 0x111318,
+        roughness: 0.65,
+        metalness: 0.12,
+        emissive: 0x000000
+      }),
+      resinPiston: new THREE.MeshStandardMaterial({
+        color: 0x3b2824, // Dark phenolic brown-black resin
+        roughness: 0.32,
+        metalness: 0.15
+      }),
+      padFriction: new THREE.MeshStandardMaterial({
+        color: 0x4b423b, // Copper-flecked organic resin pad compound
+        roughness: 0.88,
+        metalness: 0.22
+      }),
+      yellowORing: new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        roughness: 0.45,
+        metalness: 0.1
+      }),
+      hoseOuter: new THREE.MeshStandardMaterial({
+        color: 0x12151c,
+        roughness: 0.55,
+        metalness: 0.15,
+        transparent: true,
+        opacity: 0.78 // Slightly translucent so pink mineral oil core is visible
+      }),
+      mineralOil: new THREE.MeshStandardMaterial({
+        color: 0xff2a7a,
+        emissive: 0xd91656,
+        emissiveIntensity: 0.55,
+        roughness: 0.15,
+        metalness: 0.05,
+        transparent: true,
+        opacity: 0.88
+      }),
+      internalChannel: new THREE.MeshStandardMaterial({
+        color: 0xff3b8b,
+        emissive: 0xe11d48,
+        emissiveIntensity: 0.45,
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.72
+      })
+    };
+
+    // Helper to register clickable meshes for raycasting
+    const interactiveMeshes = [];
+    const partGroups = {};
+    function registerPart(meshOrGroup, partKey) {
+      meshOrGroup.traverse((child) => {
+        if (child.isMesh) {
+          child.userData.partKey = partKey;
+          interactiveMeshes.push(child);
+        }
+      });
+      if (!partGroups[partKey]) partGroups[partKey] = [];
+      partGroups[partKey].push(meshOrGroup);
+    }
+
+    // =========================================================================
+    // 4. 构建 3D 模型组件 (BL-MT201, SM-BH59, BR-MT200, Seals, Pistons, Pads, RT26)
+    // =========================================================================
+    const rootGroup = new THREE.Group();
+    scene.add(rootGroup);
+
+    // -------------------------------------------------------------------------
+    // A. 刹把总成 (BL-MT201 Lever Assembly) - Located Upper Left (-7.5, 4.8, 0)
+    // -------------------------------------------------------------------------
+    const leverAssembly = new THREE.Group();
+    leverAssembly.position.set(-7.5, 4.8, 0);
+    rootGroup.add(leverAssembly);
+
+    const leverBodyGroup = new THREE.Group();
+    leverAssembly.add(leverBodyGroup);
+
+    // Handlebar clamp ring (22.2mm bar mount)
+    const clampRingGeo = new THREE.CylinderGeometry(1.15, 1.15, 1.1, 32, 1, true);
+    const clampRing = new THREE.Mesh(clampRingGeo, materials.anodizedBlack);
+    clampRing.rotation.x = Math.PI / 2;
+    clampRing.position.set(-1.6, 0, 0);
+    leverBodyGroup.add(clampRing);
+
+    const clampSolidGeo = new THREE.TorusGeometry(1.05, 0.18, 16, 36);
+    const clampSolid = new THREE.Mesh(clampSolidGeo, materials.anodizedBlack);
+    clampSolid.position.set(-1.6, 0, 0);
+    leverBodyGroup.add(clampSolid);
+
+    // Clamp bolt boss
+    const clampBoltBoss = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.65, 0.85), materials.anodizedBlack);
+    clampBoltBoss.position.set(-1.6, 1.1, 0);
+    leverBodyGroup.add(clampBoltBoss);
+
+    // Master cylinder & Reservoir body (angled ergonomically)
+    const masterCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.72, 3.6, 28), materials.anodizedBlack);
+    masterCylinder.rotation.z = -Math.PI / 2.25;
+    masterCylinder.position.set(0.2, 0.25, 0);
+    masterCylinder.castShadow = true;
+    leverBodyGroup.add(masterCylinder);
+
+    // Top reservoir cap (SHIMANO logo plate style)
+    const reservoirBox = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.55, 1.05), materials.anodizedBlack);
+    reservoirBox.rotation.z = -0.18;
+    reservoirBox.position.set(0.15, 0.85, 0);
+    reservoirBox.castShadow = true;
+    leverBodyGroup.add(reservoirBox);
+
+    // Visible internal translucent oil window inside lever master cylinder
+    const masterOilWindow = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 2.2, 20), materials.internalChannel);
+    masterOilWindow.rotation.z = -Math.PI / 2.25;
+    masterOilWindow.position.set(0.35, 0.22, 0.42);
+    leverBodyGroup.add(masterOilWindow);
+
+    // Internal master piston (moves when squeezing lever)
+    const masterPiston = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.5, 20), materials.stainlessSteel);
+    masterPiston.rotation.z = -Math.PI / 2.25;
+    masterPiston.position.set(-0.25, 0.32, 0.42);
+    leverBodyGroup.add(masterPiston);
+
+    // Hose outlet compression nut & rubber boot on lever
+    const leverCompressionNut = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.75, 6), materials.stainlessSteel);
+    leverCompressionNut.rotation.z = -Math.PI / 2.25;
+    leverCompressionNut.position.set(2.15, -0.05, 0);
+    leverBodyGroup.add(leverCompressionNut);
+
+    const leverBoot = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.38, 1.1, 20), materials.rubberBlack);
+    leverBoot.rotation.z = -Math.PI / 2.25;
+    leverBoot.position.set(2.95, -0.18, 0);
+    leverBodyGroup.add(leverBoot);
+
+    registerPart(leverBodyGroup, 'lever_body');
+
+    // Top Hex Bleed Screw + Yellow O-Ring
+    const bleedScrewGroup = new THREE.Group();
+    bleedScrewGroup.position.set(-0.45, 1.18, 0.15);
+    bleedScrewGroup.rotation.z = -0.18;
+    leverAssembly.add(bleedScrewGroup);
+
+    const yellowORing = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.055, 12, 24), materials.yellowORing);
+    yellowORing.rotation.x = Math.PI / 2;
+    bleedScrewGroup.add(yellowORing);
+
+    const bleedScrewHead = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.22, 24), materials.stainlessSteel);
+    bleedScrewHead.position.y = 0.12;
+    bleedScrewGroup.add(bleedScrewHead);
+
+    const hexSocket = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.05, 6), materials.rubberBlack);
+    hexSocket.position.y = 0.22;
+    bleedScrewGroup.add(hexSocket);
+
+    registerPart(bleedScrewGroup, 'bleed_screw');
+
+    // 3-Finger Brake Lever Blade (Pivots around pivot pin)
+    const leverPivotGroup = new THREE.Group();
+    leverPivotGroup.position.set(-0.35, -0.15, 0);
+    leverAssembly.add(leverPivotGroup);
+
+    const pivotPin = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.15, 20), materials.stainlessSteel);
+    pivotPin.rotation.x = Math.PI / 2;
+    leverPivotGroup.add(pivotPin);
+
+    // Sculpted 3-finger lever blade
+    const bladeShape = new THREE.Shape();
+    bladeShape.moveTo(0, 0.25);
+    bladeShape.lineTo(-1.8, -0.65);
+    bladeShape.quadraticCurveTo(-3.4, -1.35, -4.6, -1.55);
+    bladeShape.quadraticCurveTo(-5.0, -1.62, -4.9, -1.95);
+    bladeShape.quadraticCurveTo(-3.5, -1.85, -1.6, -1.1);
+    bladeShape.lineTo(0.25, -0.25);
+    bladeShape.closePath();
+
+    const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, {
+      depth: 0.36,
+      bevelEnabled: true,
+      bevelSegments: 3,
+      steps: 1,
+      bevelSize: 0.06,
+      bevelThickness: 0.06
+    });
+    bladeGeo.translate(0, 0, -0.18);
+    const leverBladeMesh = new THREE.Mesh(bladeGeo, materials.leverBlade);
+    leverBladeMesh.castShadow = true;
+    leverPivotGroup.add(leverBladeMesh);
+    registerPart(leverPivotGroup, 'lever_body');
+
+    // -------------------------------------------------------------------------
+    // B. 液压油管 (SM-BH59 Hydraulic Hose + Animated Mineral Oil Particles)
+    // -------------------------------------------------------------------------
+    const hoseGroup = new THREE.Group();
+    rootGroup.add(hoseGroup);
+
+    const hoseCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-4.5, 4.6, 0),
+      new THREE.Vector3(-2.0, 4.0, 0.2),
+      new THREE.Vector3(0.4, 2.7, 0.25),
+      new THREE.Vector3(1.8, 1.4, 0.1),
+      new THREE.Vector3(2.8, 0.85, 0)
+    ]);
+
+    // Outer translucent black hose sheath
+    const outerHoseGeo = new THREE.TubeGeometry(hoseCurve, 64, 0.22, 16, false);
+    const outerHoseMesh = new THREE.Mesh(outerHoseGeo, materials.hoseOuter);
+    outerHoseMesh.castShadow = true;
+    hoseGroup.add(outerHoseMesh);
+
+    // Inner continuous pink mineral oil column
+    const innerOilGeo = new THREE.TubeGeometry(hoseCurve, 64, 0.11, 12, false);
+    const innerOilMesh = new THREE.Mesh(innerOilGeo, materials.internalChannel);
+    hoseGroup.add(innerOilMesh);
+
+    // Animated oil flow particles inside hose
+    const oilParticles = [];
+    const particleGeo = new THREE.SphereGeometry(0.135, 10, 10);
+    const PARTICLE_COUNT = 24;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const pMesh = new THREE.Mesh(particleGeo, materials.mineralOil);
+      const t = i / PARTICLE_COUNT;
+      pMesh.userData.t = t;
+      const pos = hoseCurve.getPointAt(t);
+      pMesh.position.copy(pos);
+      hoseGroup.add(pMesh);
+      oilParticles.push(pMesh);
+    }
+
+    registerPart(hoseGroup, 'hose');
+
+    // -------------------------------------------------------------------------
+    // C. 卡钳总成 (BR-MT200 Post-Mount Caliper) - Centered at (4.6, -0.3, 0)
+    //    Orientation: Rotor lies in the X-Y plane (Z = 0).
+    //    Left Piston/Pad is at -Z, Right Piston/Pad is at +Z.
+    // -------------------------------------------------------------------------
+    const caliperCenter = new THREE.Vector3(4.6, -0.3, 0);
+    const caliperAssembly = new THREE.Group();
+    caliperAssembly.position.copy(caliperCenter);
+    rootGroup.add(caliperAssembly);
+
+    // Caliper Left Half (-Z side) & Right Half (+Z side)
+    const caliperLeftHalf = new THREE.Group();
+    const caliperRightHalf = new THREE.Group();
+    caliperAssembly.add(caliperLeftHalf);
+    caliperAssembly.add(caliperRightHalf);
+
+    function createCaliperHalfMesh(sideSign) {
+      // sideSign: -1 for Left (-Z), +1 for Right (+Z)
+      const halfGroup = new THREE.Group();
+
+      // Main forged caliper body block (leaving center rotor slot clear: |Z| from 0.42 to 1.68)
+      const shape = new THREE.Shape();
+      shape.moveTo(-1.6, -1.25);
+      shape.lineTo(1.6, -1.25);
+      shape.quadraticCurveTo(2.1, -0.7, 2.0, 0.3);
+      shape.lineTo(1.3, 1.35);
+      shape.lineTo(-1.3, 1.35);
+      shape.lineTo(-2.05, 0.45);
+      shape.quadraticCurveTo(-2.15, -0.65, -1.6, -1.25);
+
+      const extrudeSettings = {
+        depth: 1.05,
+        bevelEnabled: true,
+        bevelSegments: 3,
+        steps: 1,
+        bevelSize: 0.1,
+        bevelThickness: 0.1
+      };
+      const bodyGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      if (sideSign < 0) {
+        bodyGeo.translate(0, 0, -1.48);
+      } else {
+        bodyGeo.translate(0, 0, 0.43);
+      }
+      const bodyMesh = new THREE.Mesh(bodyGeo, materials.caliperBody);
+      bodyMesh.castShadow = true;
+      bodyMesh.receiveShadow = true;
+      halfGroup.add(bodyMesh);
+
+      // Cylindrical Piston Bore Boss on outer wall
+      const boreBoss = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.18, 1.24, 0.45, 32),
+        materials.caliperBody
+      );
+      boreBoss.rotation.x = Math.PI / 2;
+      boreBoss.position.set(0, -0.1, sideSign * 1.62);
+      boreBoss.castShadow = true;
+      halfGroup.add(boreBoss);
+
+      // Top Bridge Arch connecting left & right halves above rotor
+      const bridgeBlock = new THREE.Mesh(
+        new THREE.BoxGeometry(2.3, 0.55, 0.46),
+        materials.caliperBody
+      );
+      bridgeBlock.position.set(0, 1.22, sideSign * 0.23);
+      halfGroup.add(bridgeBlock);
+
+      // Post-Mount Mounting Ears (Upper & Lower)
+      if (sideSign < 0) {
+        const earTop = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.9, 20), materials.caliperBody);
+        earTop.position.set(-1.85, 1.45, -0.85);
+        halfGroup.add(earTop);
+
+        const earBot = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.9, 20), materials.caliperBody);
+        earBot.position.set(1.85, -1.45, -0.85);
+        halfGroup.add(earBot);
+
+        // Post-Mount Allen Bolts
+        const boltTop = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 1.35, 16), materials.stainlessSteel);
+        boltTop.position.set(-1.85, 1.65, -0.85);
+        halfGroup.add(boltTop);
+
+        const boltBot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 1.35, 16), materials.stainlessSteel);
+        boltBot.position.set(1.85, -1.65, -0.85);
+        halfGroup.add(boltBot);
+      }
+
+      // Internal hydraulic oil chamber & cross-over channel (visible in X-Ray mode)
+      const chamberOil = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.92, 0.92, 0.25, 28),
+        materials.internalChannel
+      );
+      chamberOil.rotation.x = Math.PI / 2;
+      chamberOil.position.set(0, -0.1, sideSign * 1.56);
+      halfGroup.add(chamberOil);
+
+      const bridgeOilPipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11, 0.11, 1.55, 12),
+        materials.internalChannel
+      );
+      bridgeOilPipe.position.set(-0.55, 0.65, sideSign * 1.35);
+      halfGroup.add(bridgeOilPipe);
+
+      return halfGroup;
+    }
+
+    caliperLeftHalf.add(createCaliperHalfMesh(-1));
+    caliperRightHalf.add(createCaliperHalfMesh(1));
+
+    // Hose inlet nut & rubber boot on Caliper Left/Top side
+    const caliperHoseFitting = new THREE.Group();
+    caliperHoseFitting.position.set(-1.75, 1.15, 0);
+    caliperHoseFitting.rotation.z = 0.55;
+    caliperLeftHalf.add(caliperHoseFitting);
+
+    const calNut = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.65, 6), materials.stainlessSteel);
+    calNut.rotation.z = Math.PI / 2;
+    caliperHoseFitting.add(calNut);
+
+    const calBoot = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.24, 0.9, 16), materials.rubberBlack);
+    calBoot.rotation.z = Math.PI / 2;
+    calBoot.position.x = -0.7;
+    caliperHoseFitting.add(calBoot);
+
+    registerPart(caliperLeftHalf, 'caliper_body');
+    registerPart(caliperRightHalf, 'caliper_body');
+
+    // Top Bleed Nipple + Rubber Dust Cap (on Caliper Right Upper Boss)
+    const bleedNippleGroup = new THREE.Group();
+    bleedNippleGroup.position.set(0.65, 1.62, 0.85);
+    caliperRightHalf.add(bleedNippleGroup);
+
+    const nippleHex = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.38, 6), materials.stainlessSteel);
+    bleedNippleGroup.add(nippleHex);
+
+    const nippleTip = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.35, 16), materials.stainlessSteel);
+    nippleTip.position.y = 0.32;
+    bleedNippleGroup.add(nippleTip);
+
+    const dustCap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.42, 16), materials.rubberBlack);
+    dustCap.position.y = 0.42;
+    bleedNippleGroup.add(dustCap);
+
+    registerPart(bleedNippleGroup, 'split_pin');
+
+    // -------------------------------------------------------------------------
+    // D. 矩形截面橡胶密封圈 (Rectangular Piston Seals)
+    //    Positioned inside cylinder grooves at Z = ±0.92
+    // -------------------------------------------------------------------------
+    function createRectangularSealMesh() {
+      // LatheGeometry with a rectangular cross-section profile
+      const rInner = 0.94;
+      const rOuter = 1.12;
+      const halfThick = 0.12;
+      const pts = [
+        new THREE.Vector2(rInner, -halfThick),
+        new THREE.Vector2(rOuter, -halfThick),
+        new THREE.Vector2(rOuter, halfThick),
+        new THREE.Vector2(rInner, halfThick),
+        new THREE.Vector2(rInner, -halfThick)
+      ];
+      const geo = new THREE.LatheGeometry(pts, 40);
+      geo.rotateX(Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, materials.rectangularSeal.clone());
+      return mesh;
+    }
+
+    const leftSeal = createRectangularSealMesh();
+    leftSeal.position.set(0, -0.1, -0.92);
+    caliperAssembly.add(leftSeal);
+
+    const rightSeal = createRectangularSealMesh();
+    rightSeal.position.set(0, -0.1, 0.92);
+    caliperAssembly.add(rightSeal);
+
+    registerPart(leftSeal, 'piston_seal');
+    registerPart(rightSeal, 'piston_seal');
+
+    // -------------------------------------------------------------------------
+    // E. 酚醛树脂活塞 (Resin Pistons - Ø22mm Dual Opposed)
+    // -------------------------------------------------------------------------
+    function createResinPistonMesh() {
+      // Cup-shaped piston profile using LatheGeometry
+      const pts = [
+        new THREE.Vector2(0.0, -0.32),
+        new THREE.Vector2(0.93, -0.32),
+        new THREE.Vector2(0.93, 0.32),
+        new THREE.Vector2(0.72, 0.32),
+        new THREE.Vector2(0.72, -0.14),
+        new THREE.Vector2(0.0, -0.14)
+      ];
+      const geo = new THREE.LatheGeometry(pts, 40);
+      geo.rotateX(Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, materials.resinPiston);
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    const leftPiston = createResinPistonMesh();
+    leftPiston.position.set(0, -0.1, -0.82);
+    caliperAssembly.add(leftPiston);
+
+    const rightPiston = createResinPistonMesh();
+    rightPiston.rotation.y = Math.PI; // Face inward toward rotor
+    rightPiston.position.set(0, -0.1, 0.82);
+    caliperAssembly.add(rightPiston);
+
+    registerPart(leftPiston, 'resin_piston');
+    registerPart(rightPiston, 'resin_piston');
+
+    // -------------------------------------------------------------------------
+    // F. 来令片组件 (B05S Resin Brake Pads + Return Spring + Split Pin)
+    // -------------------------------------------------------------------------
+    const padsGroup = new THREE.Group();
+    caliperAssembly.add(padsGroup);
+
+    function createBrakePadAssembly(sideSign) {
+      // sideSign: -1 (Left pad), +1 (Right pad)
+      const padUnit = new THREE.Group();
+
+      // Steel backing plate shape (B05S wide profile with top retaining ear)
+      const padShape = new THREE.Shape();
+      padShape.moveTo(-1.15, -0.85);
+      padShape.lineTo(1.15, -0.85);
+      padShape.quadraticCurveTo(1.25, 0.25, 0.95, 0.72);
+      padShape.lineTo(0.28, 0.72);
+      padShape.lineTo(0.28, 1.18);
+      padShape.quadraticCurveTo(0, 1.32, -0.28, 1.18);
+      padShape.lineTo(-0.28, 0.72);
+      padShape.lineTo(-0.95, 0.72);
+      padShape.quadraticCurveTo(-1.25, 0.25, -1.15, -0.85);
+
+      // Pin hole in top ear
+      const holePath = new THREE.Path();
+      holePath.absarc(0, 1.02, 0.11, 0, Math.PI * 2, false);
+      padShape.holes.push(holePath);
+
+      const plateGeo = new THREE.ExtrudeGeometry(padShape, {
+        depth: 0.11,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        steps: 1,
+        bevelSize: 0.02,
+        bevelThickness: 0.02
+      });
+      const plateMesh = new THREE.Mesh(plateGeo, materials.brushedSteel);
+      plateMesh.position.z = sideSign > 0 ? 0.32 : -0.43;
+      plateMesh.castShadow = true;
+      padUnit.add(plateMesh);
+
+      // Organic resin friction material block (facing the rotor)
+      const frictionShape = new THREE.Shape();
+      frictionShape.moveTo(-1.02, -0.75);
+      frictionShape.lineTo(1.02, -0.75);
+      frictionShape.quadraticCurveTo(1.1, 0.18, 0.85, 0.58);
+      frictionShape.lineTo(-0.85, 0.58);
+      frictionShape.quadraticCurveTo(-1.1, 0.18, -1.02, -0.75);
+
+      const frictionGeo = new THREE.ExtrudeGeometry(frictionShape, {
+        depth: 0.14,
+        bevelEnabled: false
+      });
+      const frictionMesh = new THREE.Mesh(frictionGeo, materials.padFriction);
+      frictionMesh.position.z = sideSign > 0 ? 0.17 : -0.31;
+      padUnit.add(frictionMesh);
+
+      return padUnit;
+    }
+
+    const leftPad = createBrakePadAssembly(-1);
+    const rightPad = createBrakePadAssembly(1);
+    padsGroup.add(leftPad);
+    padsGroup.add(rightPad);
+
+    // Stainless Steel V-shaped Return Spring
+    const returnSpringGroup = new THREE.Group();
+    returnSpringGroup.position.set(0, 0.82, 0);
+    padsGroup.add(returnSpringGroup);
+
+    const springCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.35, -0.4, -0.24),
+      new THREE.Vector3(-0.22, 0.35, -0.14),
+      new THREE.Vector3(0, 0.45, 0),
+      new THREE.Vector3(0.22, 0.35, 0.14),
+      new THREE.Vector3(0.35, -0.4, 0.24)
+    ]);
+    const springMesh = new THREE.Mesh(
+      new THREE.TubeGeometry(springCurve, 24, 0.032, 8, false),
+      materials.stainlessSteel
+    );
+    returnSpringGroup.add(springMesh);
+
+    registerPart(padsGroup, 'brake_pads');
+
+    // Top Metal Split Pin (开口销)
+    const splitPinGroup = new THREE.Group();
+    splitPinGroup.position.set(0, 1.02, 0);
+    caliperAssembly.add(splitPinGroup);
+
+    const pinShaft = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.085, 0.085, 2.35, 16),
+      materials.stainlessSteel
+    );
+    pinShaft.rotation.x = Math.PI / 2;
+    splitPinGroup.add(pinShaft);
+
+    // Split pin eyelet loop on -Z side
+    const pinLoop = new THREE.Mesh(
+      new THREE.TorusGeometry(0.16, 0.055, 10, 20),
+      materials.stainlessSteel
+    );
+    pinLoop.position.set(0, 0, -1.24);
+    splitPinGroup.add(pinLoop);
+
+    // Bent retention leg on +Z side
+    const bentLeg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.055, 0.055, 0.42, 12),
+      materials.stainlessSteel
+    );
+    bentLeg.position.set(0, 0.14, 1.24);
+    bentLeg.rotation.x = 0.65;
+    splitPinGroup.add(bentLeg);
+
+    registerPart(splitPinGroup, 'split_pin');
+
+    // -------------------------------------------------------------------------
+    // G. SM-RT26 160mm 六钉碟片组件 (Rotating Brake Rotor + 6 Torx Bolts)
+    //    Rotor center positioned at (4.6, -4.45, 0) so upper braking track
+    //    passes cleanly through the caliper slot at (4.6, -0.3, 0)!
+    // -------------------------------------------------------------------------
+    const rotorPivot = new THREE.Group();
+    rotorPivot.position.set(4.6, -4.45, 0);
+    rootGroup.add(rotorPivot);
+
+    const rotorAssembly = new THREE.Group();
+    rotorPivot.add(rotorAssembly);
+
+    // Outer Braking Track Ring (R_outer = 4.95, R_inner = 3.85) with cooling holes
+    const rotorShape = new THREE.Shape();
+    const rOuter = 4.95;
+    const rInner = 3.85;
+    rotorShape.absarc(0, 0, rOuter, 0, Math.PI * 2, false);
+
+    const innerHole = new THREE.Path();
+    innerHole.absarc(0, 0, rInner, 0, Math.PI * 2, true);
+    rotorShape.holes.push(innerHole);
+
+    // Drilled cooling holes along two staggered tracks
+    const holeCount = 36;
+    for (let i = 0; i < holeCount; i++) {
+      const angle = (i / holeCount) * Math.PI * 2;
+      const rad = i % 2 === 0 ? 4.55 : 4.22;
+      const hx = Math.cos(angle) * rad;
+      const hy = Math.sin(angle) * rad;
+      const cHole = new THREE.Path();
+      cHole.absarc(hx, hy, 0.11, 0, Math.PI * 2, true);
+      rotorShape.holes.push(cHole);
+    }
+
+    const rotorDiscGeo = new THREE.ExtrudeGeometry(rotorShape, {
+      depth: 0.14,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      steps: 1,
+      bevelSize: 0.015,
+      bevelThickness: 0.015
+    });
+    rotorDiscGeo.translate(0, 0, -0.07);
+    const rotorDiscMesh = new THREE.Mesh(rotorDiscGeo, materials.stainlessSteel);
+    rotorDiscMesh.castShadow = true;
+    rotorDiscMesh.receiveShadow = true;
+    rotorAssembly.add(rotorDiscMesh);
+
+    // Center 6-Bolt Hub Mounting Ring
+    const hubRingShape = new THREE.Shape();
+    hubRingShape.absarc(0, 0, 1.65, 0, Math.PI * 2, false);
+    const centerAxleHole = new THREE.Path();
+    centerAxleHole.absarc(0, 0, 0.92, 0, Math.PI * 2, true);
+    hubRingShape.holes.push(centerAxleHole);
+
+    const hubRingGeo = new THREE.ExtrudeGeometry(hubRingShape, {
+      depth: 0.16,
+      bevelEnabled: false
+    });
+    hubRingGeo.translate(0, 0, -0.08);
+    const hubRingMesh = new THREE.Mesh(hubRingGeo, materials.brushedSteel);
+    rotorAssembly.add(hubRingMesh);
+
+    // 6 Sculpted Spider Arms + 6 T25 Torx Bolts & Anti-Loosening Washers
+    const rotorBoltsGroup = new THREE.Group();
+    rotorAssembly.add(rotorBoltsGroup);
+
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      // Angled structural spoke arm
+      const armGroup = new THREE.Group();
+      armGroup.rotation.z = angle;
+
+      const armMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.46, 2.45, 0.14),
+        materials.brushedSteel
+      );
+      armMesh.position.set(0.32, 2.72, 0);
+      armMesh.rotation.z = -0.24;
+      armGroup.add(armMesh);
+      rotorAssembly.add(armGroup);
+
+      // 6-Bolt Circle (R = 1.28)
+      const bx = Math.cos(angle) * 1.28;
+      const by = Math.sin(angle) * 1.28;
+
+      // Anti-loosening triangular/curved washer plate
+      const washer = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.24, 0.24, 0.05, 16),
+        materials.stainlessSteel
+      );
+      washer.rotation.x = Math.PI / 2;
+      washer.position.set(bx, by, 0.1);
+      rotorBoltsGroup.add(washer);
+
+      // T25 Torx Bolt Head
+      const boltHead = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.19, 0.19, 0.14, 16),
+        materials.stainlessSteel
+      );
+      boltHead.rotation.x = Math.PI / 2;
+      boltHead.position.set(bx, by, 0.16);
+      rotorBoltsGroup.add(boltHead);
+
+      // Torx star socket recess
+      const torxRecess = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 0.04, 6),
+        materials.rubberBlack
+      );
+      torxRecess.rotation.x = Math.PI / 2;
+      torxRecess.position.set(bx, by, 0.22);
+      rotorBoltsGroup.add(torxRecess);
+    }
+
+    registerPart(rotorPivot, 'rotor');
+
+    // -------------------------------------------------------------------------
+    // H. 矿物油滴落粒子系统 (Oil Leak Droplets for Piston Pop-Out Simulation)
+    // -------------------------------------------------------------------------
+    const leakDroplets = [];
+    const dropletGeo = new THREE.SphereGeometry(0.11, 12, 12);
+    // Stretch vertically slightly like a falling oil drop
+    dropletGeo.scale(0.85, 1.35, 0.85);
+
+    function spawnOilDroplet() {
+      const drop = new THREE.Mesh(dropletGeo, materials.mineralOil);
+      // Spawn right at the popped-out right piston seal interface in world coordinates
+      const worldPos = new THREE.Vector3();
+      rightPiston.getWorldPosition(worldPos);
+      drop.position.set(
+        worldPos.x + (Math.random() - 0.5) * 0.6,
+        worldPos.y - 0.75 + (Math.random() - 0.5) * 0.3,
+        worldPos.z + 0.15
+      );
+      drop.userData.vy = -0.02 - Math.random() * 0.02;
+      scene.add(drop);
+      leakDroplets.push(drop);
+    }
+
+    // =========================================================================
+    // 5. 交互状态机与运动学求解 (Simulation State & Kinematics)
+    // =========================================================================
+    const simState = {
+      explode: 0,         // 0 to 1
+      brake: 0,           // 0 to 1
+      xray: false,
+      popoutMode: false,
+      pistonPopped: false,
+      rotorVelocity: 0.045, // rad/frame
+      selectedPart: null,
+      targetCamPos: null,
+      targetControlsLook: null
+    };
+
+    // UI Elements
+    const explodeSlider = document.getElementById('explode-slider');
+    const explodeVal = document.getElementById('explode-val');
+    const brakeSlider = document.getElementById('brake-slider');
+    const brakeVal = document.getElementById('brake-val');
+    const btnHoldBrake = document.getElementById('btn-hold-brake');
+    const btnReleaseBrake = document.getElementById('btn-release-brake');
+    const toggleXray = document.getElementById('toggle-xray');
+    const togglePopout = document.getElementById('toggle-popout');
+    const leakAlertBanner = document.getElementById('leak-alert-banner');
+    const statusBadge = document.getElementById('status-badge');
+    const rotorRpmLabel = document.getElementById('rotor-rpm');
+
+    let isHoldingBrakeBtn = false;
+
+    explodeSlider.addEventListener('input', (e) => {
+      simState.explode = parseFloat(e.target.value) / 100;
+      explodeVal.textContent = `${e.target.value}%`;
+    });
+
+    brakeSlider.addEventListener('input', (e) => {
+      simState.brake = parseFloat(e.target.value) / 100;
+      brakeVal.textContent = `${e.target.value}%`;
+    });
+
+    // Hold brake button (Mouse & Touch)
+    const startHold = (e) => {
+      e.preventDefault();
+      isHoldingBrakeBtn = true;
+    };
+    const endHold = () => {
+      isHoldingBrakeBtn = false;
+    };
+    btnHoldBrake.addEventListener('mousedown', startHold);
+    btnHoldBrake.addEventListener('touchstart', startHold, { passive: false });
+    window.addEventListener('mouseup', endHold);
+    window.addEventListener('touchend', endHold);
+
+    btnReleaseBrake.addEventListener('click', () => {
+      isHoldingBrakeBtn = false;
+      simState.brake = 0;
+      brakeSlider.value = 0;
+      brakeVal.textContent = '0%';
+      if (simState.popoutMode && simState.pistonPopped) {
+        // Reset popped state when user clicks full reset
+        simState.pistonPopped = false;
+        leakAlertBanner.classList.add('hidden');
+        updateStatusBadge();
+      }
+    });
+
+    toggleXray.addEventListener('change', (e) => {
+      simState.xray = e.target.checked;
+      materials.caliperBody.opacity = simState.xray ? 0.24 : 1.0;
+      materials.caliperBody.depthWrite = !simState.xray;
+      materials.caliperBody.needsUpdate = true;
+    });
+
+    togglePopout.addEventListener('change', (e) => {
+      simState.popoutMode = e.target.checked;
+      simState.pistonPopped = false;
+      leakAlertBanner.classList.add('hidden');
+      // Hide rotor & pads in popout mode so user clearly sees empty caliper gap
+      rotorPivot.visible = !simState.popoutMode;
+      padsGroup.visible = !simState.popoutMode;
+      updateStatusBadge();
+    });
+
+    function updateStatusBadge() {
+      if (simState.pistonPopped) {
+        statusBadge.textContent = '⚠ 活塞脱出漏油失压';
+        statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/25 text-rose-300 border border-rose-500/50 font-semibold animate-pulse';
+      } else if (simState.popoutMode) {
+        statusBadge.textContent = '无碟片空载状态 (警告)';
+        statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-medium';
+      } else {
+        statusBadge.textContent = '系统油压正常';
+        statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium';
+      }
+    }
+
+    // =========================================================================
+    // 6. 视角预设切换 (Camera Presets)
+    // =========================================================================
+    window.setCameraView = function (preset) {
+      document.querySelectorAll('.view-btn').forEach((btn) => {
+        btn.classList.remove('bg-sky-500/25', 'text-sky-300', 'border-sky-400/40');
+        btn.classList.add('text-slate-300', 'border-transparent');
+      });
+      const activeBtn = document.getElementById(`btn-view-${preset}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-300', 'border-transparent');
+        activeBtn.classList.add('bg-sky-500/25', 'text-sky-300', 'border-sky-400/40');
+      }
+
+      if (preset === 'overview') {
+        simState.targetCamPos = new THREE.Vector3(14, 9.5, 19);
+        simState.targetControlsLook = new THREE.Vector3(1.5, 0.5, 0);
+      } else if (preset === 'caliper') {
+        simState.targetCamPos = new THREE.Vector3(9.8, 2.2, 7.6);
+        simState.targetControlsLook = new THREE.Vector3(4.6, -0.2, 0);
+      } else if (preset === 'rotor') {
+        simState.targetCamPos = new THREE.Vector3(11.5, -3.5, 8.5);
+        simState.targetControlsLook = new THREE.Vector3(4.6, -3.2, 0);
+      }
+    };
+
+    // Mobile UI collapse toggle
+    let mobileCollapsed = false;
+    window.toggleMobileUI = function () {
+      mobileCollapsed = !mobileCollapsed;
+      const lp = document.getElementById('left-panel');
+      const btn = document.getElementById('btn-toggle-ui');
+      if (mobileCollapsed) {
+        lp.classList.add('translate-y-[115%]', 'opacity-0', 'pointer-events-none');
+        btn.textContent = '控制面板';
+      } else {
+        lp.classList.remove('translate-y-[115%]', 'opacity-0', 'pointer-events-none');
+        btn.textContent = '收起面板';
+      }
+    };
+
+    // =========================================================================
+    // 7. 零件点击拾取、高亮与 3D 悬浮标签 (Raycasting & Inspector Sync)
+    // =========================================================================
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const floatingTag = document.getElementById('floating-tag');
+    const floatingTagTitle = document.getElementById('floating-tag-title');
+
+    // Populate quick part selector pills
+    const pillsContainer = document.getElementById('part-pills');
+    Object.values(PART_DATABASE).forEach((part) => {
+      const btn = document.createElement('button');
+      btn.textContent = part.shortName;
+      btn.className = 'part-pill text-[10px] px-2 py-1 rounded-lg bg-slate-800/90 hover:bg-sky-500/25 text-slate-300 hover:text-sky-200 border border-slate-700 hover:border-sky-400/50 transition';
+      btn.dataset.partKey = part.id;
+      btn.addEventListener('click', () => selectPart(part.id));
+      pillsContainer.appendChild(btn);
+    });
+
+    function selectPart(partKey) {
+      const info = PART_DATABASE[partKey];
+      if (!info) return;
+
+      simState.selectedPart = partKey;
+
+      // Reset previous emissive highlights
+      Object.values(materials).forEach((mat) => {
+        if (mat !== materials.mineralOil && mat !== materials.internalChannel && mat.emissive) {
+          mat.emissive.setHex(0x000000);
+        }
+      });
+
+      // Highlight selected part meshes
+      const groups = partGroups[partKey] || [];
+      groups.forEach((grp) => {
+        grp.traverse((child) => {
+          if (child.isMesh && child.material && child.material.emissive) {
+            if (child.material !== materials.mineralOil && child.material !== materials.internalChannel) {
+              child.material.emissive.setHex(0x0c4a6e);
+            }
+          }
+        });
+      });
+
+      // Update right inspector panel
+      document.getElementById('part-category').textContent = info.category;
+      document.getElementById('part-title').textContent = info.title;
+      document.getElementById('part-model').textContent = info.model;
+      document.getElementById('part-material').textContent = info.material;
+      document.getElementById('part-function').textContent = info.func;
+      document.getElementById('part-maintenance').textContent = info.maintenance;
+
+      // Update mobile toast
+      document.getElementById('mob-part-title').textContent = info.title;
+      document.getElementById('mob-part-model').textContent = info.shortName;
+      document.getElementById('mob-part-note').textContent = info.maintenance;
+      document.getElementById('mobile-part-card').classList.remove('hidden');
+
+      // Highlight active pill
+      document.querySelectorAll('.part-pill').forEach((p) => {
+        if (p.dataset.partKey === partKey) {
+          p.classList.add('bg-sky-500/30', 'text-sky-200', 'border-sky-400');
+        } else {
+          p.classList.remove('bg-sky-500/30', 'text-sky-200', 'border-sky-400');
+        }
+      });
+
+      // Show floating 3D label
+      floatingTagTitle.textContent = info.shortName;
+      floatingTag.classList.remove('hidden');
+      requestAnimationFrame(() => floatingTag.classList.remove('opacity-0'));
+    }
+
+    // Distinguish pointer tap/click from OrbitControls drag
+    let downX = 0;
+    let downY = 0;
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      downX = e.clientX;
+      downY = e.clientY;
+      // Cancel preset camera lerp when user manually drags
+      simState.targetCamPos = null;
+      simState.targetControlsLook = null;
+    });
+
+    renderer.domElement.addEventListener('pointerup', (e) => {
+      const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
+      if (dist > 6) return; // Was a drag, not a click
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes, false);
+
+      for (let i = 0; i < intersects.length; i++) {
+        const hitObj = intersects[i].object;
+        if (hitObj.visible && hitObj.parent && hitObj.parent.visible && hitObj.userData.partKey) {
+          selectPart(hitObj.userData.partKey);
+          break;
+        }
+      }
+    });
+
+    function updateFloatingTagPosition() {
+      if (!simState.selectedPart || !partGroups[simState.selectedPart]) return;
+      const targetGroup = partGroups[simState.selectedPart][0];
+      if (!targetGroup || !targetGroup.visible) {
+        floatingTag.classList.add('opacity-0');
+        return;
+      }
+
+      const box = new THREE.Box3().setFromObject(targetGroup);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      center.y = box.max.y + 0.25;
+
+      center.project(camera);
+      if (center.z > 1) {
+        floatingTag.classList.add('opacity-0');
+        return;
+      }
+
+      const x = (center.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-(center.y * 0.5) + 0.5) * window.innerHeight;
+      floatingTag.style.left = `${x}px`;
+      floatingTag.style.top = `${y}px`;
+      floatingTag.classList.remove('opacity-0');
+    }
+
+    // =========================================================================
+    // 8. 主动画与物理运动学循环 (Animation & Physics Loop)
+    // =========================================================================
+    let lastBrake = 0;
+    let dropletSpawnTimer = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Smoothly ramp brake force when holding the "按住捏紧刹把" button
+      if (isHoldingBrakeBtn) {
+        simState.brake = Math.min(1, simState.brake + 0.035);
+        const pct = Math.round(simState.brake * 100);
+        brakeSlider.value = pct;
+        brakeVal.textContent = `${pct}%`;
+      }
+
+      const e = simState.explode; // 0 .. 1
+      const b = simState.brake;   // 0 .. 1
+      const brakeDelta = b - lastBrake;
+      lastBrake = b;
+
+      // 1. Lever Blade & Master Cylinder Piston Kinematics
+      leverPivotGroup.rotation.z = b * 0.42; // Rotate lever blade toward handlebar
+      masterPiston.position.x = -0.25 + b * 0.55;
+      masterPiston.position.y = 0.32 - b * 0.1;
+
+      // 2. Pink Mineral Oil Particle Flow in SM-BH59 Hose
+      const flowSpeed = brakeDelta * 0.35 + (b > 0.02 ? 0.0012 * b : 0);
+      oilParticles.forEach((p) => {
+        p.userData.t = (p.userData.t + flowSpeed + 1) % 1;
+        const pos = hoseCurve.getPointAt(p.userData.t);
+        p.position.copy(pos);
+      });
+
+      // 3. Exploded View Offsets (Axial separation along Z & Y)
+      caliperLeftHalf.position.z = -e * 3.4;
+      caliperRightHalf.position.z = e * 3.4;
+      bleedScrewGroup.position.y = 1.18 + e * 0.9;
+      splitPinGroup.position.z = -e * 4.5;
+      returnSpringGroup.position.y = 0.82 + e * 1.4;
+      rotorBoltsGroup.position.z = e * 2.2;
+
+      // 4. Piston, Rectangular Seal & Pad Kinematics
+      if (simState.popoutMode) {
+        // Fault Demo Mode: No rotor or pads limiting piston travel!
+        leftSeal.position.z = -0.92 - e * 2.2;
+        rightSeal.position.z = 0.92 + e * 2.2;
+
+        if (b > 0.52 || simState.pistonPopped) {
+          if (!simState.pistonPopped) {
+            simState.pistonPopped = true;
+            leakAlertBanner.classList.remove('hidden');
+            updateStatusBadge();
+          }
+          // Right piston pops completely out of the rectangular seal groove and tilts down!
+          leftPiston.position.z = -0.45 - e * 1.2;
+          rightPiston.position.z = 0.12 + e * 1.2;
+          rightPiston.position.y = -0.35;
+          rightPiston.rotation.x = 0.32;
+
+          // Spawn dripping pink mineral oil droplets
+          dropletSpawnTimer++;
+          if (dropletSpawnTimer % 7 === 0) {
+            spawnOilDroplet();
+          }
+        } else {
+          // Over-extending before pop-out threshold
+          leftPiston.position.z = -0.82 + b * 0.72 - e * 1.2;
+          rightPiston.position.z = 0.82 - b * 0.72 + e * 1.2;
+          rightPiston.position.y = -0.1;
+          rightPiston.rotation.x = 0;
+        }
+      } else {
+        // Normal Assembly Mode:
+        // Pistons travel inward by max 0.15 units until pads clamp the 0.14-thick rotor
+        const pistonTravel = b * 0.15;
+        const padTravel = b * 0.095;
+
+        leftSeal.position.z = -0.92 - e * 2.2;
+        rightSeal.position.z = 0.92 + e * 2.2;
+
+        // Rectangular Seal Elastic Shear Deformation (roll-back effect)
+        const sealShear = 1 + b * 0.18;
+        leftSeal.scale.set(1, 1, sealShear);
+        rightSeal.scale.set(1, 1, sealShear);
+
+        leftPiston.position.z = -0.82 + pistonTravel - e * 1.2;
+        rightPiston.position.z = 0.82 - pistonTravel + e * 1.2;
+        rightPiston.position.y = -0.1;
+        rightPiston.rotation.x = 0;
+
+        leftPad.position.z = -padTravel - e * 0.55;
+        rightPad.position.z = padTravel + e * 0.55;
+      }
+
+      // 5. Update Falling Pink Mineral Oil Droplets
+      for (let i = leakDroplets.length - 1; i >= 0; i--) {
+        const drop = leakDroplets[i];
+        drop.userData.vy -= 0.0045; // Gravity acceleration
+        drop.position.y += drop.userData.vy;
+        if (drop.position.y < -7.2) {
+          scene.remove(drop);
+          leakDroplets.splice(i, 1);
+        }
+      }
+
+      // 6. SM-RT26 Rotor Spin & Braking Deceleration
+      if (!simState.popoutMode) {
+        const targetSpeed = e > 0.05 ? 0.015 : 0.048 * Math.max(0, 1 - b * 1.35);
+        simState.rotorVelocity += (targetSpeed - simState.rotorVelocity) * 0.08;
+        if (b > 0.75 && e === 0) {
+          simState.rotorVelocity = 0; // Full lockup stop!
+        }
+        rotorAssembly.rotation.z -= simState.rotorVelocity;
+        const rpm = Math.round((simState.rotorVelocity / (Math.PI * 2)) * 60 * 60);
+        rotorRpmLabel.textContent = rpm === 0 ? '碟片状态: 已刹停锁定' : `碟片转速: ${rpm} RPM`;
+      }
+
+      // 7. Smooth Camera Preset Transition
+      if (simState.targetCamPos && simState.targetControlsLook) {
+        camera.position.lerp(simState.targetCamPos, 0.07);
+        controls.target.lerp(simState.targetControlsLook, 0.07);
+        if (camera.position.distanceTo(simState.targetCamPos) < 0.05) {
+          simState.targetCamPos = null;
+          simState.targetControlsLook = null;
+        }
+      }
+
+      controls.update();
+      updateFloatingTagPosition();
+      renderer.render(scene, camera);
+    }
+
+    // Handle Responsive Window Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Start Animation Loop on Window Load
+    window.onload = function () {
+      animate();
+    };
+  </script>
+</body>
+</html>
