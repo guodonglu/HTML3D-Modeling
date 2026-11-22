@@ -6,13 +6,19 @@
   <title>禧玛诺 MT200 液压碟刹总成 3D 结构建模</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter & Noto Sans SC -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Three.js r128 & OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Three.js r128 & OrbitControls (本地优先，CDN兜底) -->
+  <script src="./vendor/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="./vendor/OrbitControls.js"></script>
+  <script>
+    if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
 
   <style>
     * {
@@ -25,9 +31,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0b0f17;
+      background-color: #0b0f17 !important;
       color: #e2e8f0;
-      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     }
     #canvas-container {
       position: fixed;
@@ -1609,10 +1615,15 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Start Animation Loop on Window Load
-    window.onload = function () {
+    // Start Animation Loop immediately with safe fallback
+    try {
       animate();
-    };
+    } catch (e) {
+      console.warn('Initial animate execution caught:', e);
+      window.addEventListener('DOMContentLoaded', () => {
+        try { animate(); } catch (err) { console.error('Animate error:', err); }
+      });
+    }
   </script>
 </body>
 </html>
